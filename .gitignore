@@ -1,0 +1,29 @@
+# Build artifacts
+build/
+*.o
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Editor
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# AI / LLM artifacts
+.claude/
+.omc/
+.aider*
+.cursor/
+.copilot/
+CLAUDE.md
+AGENTS.md

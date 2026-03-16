@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Depth &mdash; Full SSH-2.0 Protocol in Pure x86_64 Assembly</title>
+  <meta name="description" content="Complete SSH-2.0 implementation in pure x86_64 NASM assembly. KEX, auth, encrypted transport, PTY, SFTP, port forwarding, pipe exec. ~94 KB static ELF, no libc.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%F0%9F%94%B1%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    /* =========================================================
+       DEPTH LANDING PAGE
+       Catppuccin Mocha palette — dark terminal aesthetic
+       ========================================================= */
+
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --ctp-rosewater: #f5e0dc;
+      --ctp-flamingo: #f2cdcd;
+      --ctp-pink: #f5c2e7;
+      --ctp-mauve: #cba6f7;
+      --ctp-red: #f38ba8;
+      --ctp-maroon: #eba0ac;
+      --ctp-peach: #fab387;
+      --ctp-yellow: #f9e2af;
+      --ctp-green: #a6e3a1;
+      --ctp-teal: #94e2d5;
+      --ctp-sky: #89dceb;
+      --ctp-sapphire: #74c7ec;
+      --ctp-blue: #89b4fa;
+      --ctp-lavender: #b4befe;
+      --ctp-text: #cdd6f4;
+      --ctp-subtext1: #bac2de;
+      --ctp-subtext0: #a6adc8;
+      --ctp-overlay2: #9399b2;
+      --ctp-overlay1: #7f849c;
+      --ctp-overlay0: #6c7086;
+      --ctp-surface2: #585b70;
+      --ctp-surface1: #45475a;
+      --ctp-surface0: #313244;
+      --ctp-base: #1e1e2e;
+      --ctp-mantle: #181825;
+      --ctp-crust: #11111b;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      scrollbar-width: thin;
+      scrollbar-color: var(--ctp-surface1) var(--ctp-crust);
+    }
+
+    body {
+      font-family: 'JetBrains Mono', monospace;
+      background-color: var(--ctp-crust);
+      color: var(--ctp-text);
+      line-height: 1.7;
+      font-size: 15px;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* ---- Dot-grid background pattern ---- */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(var(--ctp-surface0) 1px, transparent 1px);
+      background-size: 24px 24px;
+      opacity: 0.3;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ---- CRT scanline overlay ---- */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.03) 2px,
+        rgba(0, 0, 0, 0.03) 4px
+      );
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* ---- Layout ---- */
+    .page-wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    section {
+      margin-bottom: 96px;
+    }
+
+    a {
+      color: var(--ctp-sapphire);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    a:hover {
+      color: var(--ctp-sky);
+    }
+
+    /* ---- Section titles ---- */
+    .section-label {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay0);
+      border: 1px solid var(--ctp-surface1);
+      padding: 4px 12px;
+      border-radius: 2px;
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      font-size: clamp(22px, 3vw, 30px);
+      font-weight: 700;
+      color: var(--ctp-text);
+      margin-bottom: 12px;
+      line-height: 1.3;
+    }
+
+    .section-desc {
+      color: var(--ctp-subtext0);
+      font-size: 14px;
+      max-width: 600px;
+      margin-bottom: 40px;
+    }
+
+    /* =========================================================
+       HERO
+       ========================================================= */
+    .hero {
+      padding: 80px 0 48px;
+      text-align: center;
+      margin-bottom: 64px;
+    }
+
+    .hero-terminal {
+      border: 1px solid var(--ctp-surface1);
+      border-radius: 8px;
+      background: var(--ctp-mantle);
+      max-width: 780px;
+      margin: 0 auto;
+      overflow: hidden;
+      box-shadow:
+        0 0 0 1px var(--ctp-surface0),
+        0 24px 80px -12px rgba(0, 0, 0, 0.6),
+        0 0 120px -40px rgba(148, 226, 213, 0.08);
+    }
+
+    .hero-titlebar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: var(--ctp-crust);
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+
+    .hero-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .hero-dot--red    { background: var(--ctp-red); }
+    .hero-dot--yellow { background: var(--ctp-yellow); }
+    .hero-dot--green  { background: var(--ctp-green); }
+
+    .hero-titlebar-text {
+      flex: 1;
+      text-align: center;
+      font-size: 12px;
+      color: var(--ctp-overlay0);
+      letter-spacing: 0.05em;
+    }
+
+    .hero-body {
+      padding: 48px 40px 56px;
+    }
+
+    .hero-prompt {
+      font-size: 13px;
+      color: var(--ctp-overlay0);
+      margin-bottom: 24px;
+      letter-spacing: 0.02em;
+    }
+
+    .hero-prompt .prompt-symbol {
+      color: var(--ctp-green);
+    }
+
+    .hero-prompt .prompt-path {
+      color: var(--ctp-blue);
+    }
+
+    .hero-prompt .prompt-cmd {
+      color: var(--ctp-text);
+    }
+
+    .hero-prompt .prompt-flag {
+      color: var(--ctp-peach);
+    }
+
+    .hero-prompt .prompt-arg {
+      color: var(--ctp-yellow);
+    }
+
+    .hero-title {
+      font-size: clamp(42px, 7vw, 72px);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+      margin-bottom: 8px;
+      background: linear-gradient(
+        135deg,
+        var(--ctp-teal) 0%,
+        var(--ctp-sapphire) 35%,
+        var(--ctp-blue) 65%,
+        var(--ctp-mauve) 100%
+      );
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 40px rgba(148, 226, 213, 0.2));
+    }
+
+    .hero-cursor {
+      display: inline-block;
+      width: 3px;
+      height: 0.8em;
+      background: var(--ctp-teal);
+      margin-left: 4px;
+      vertical-align: baseline;
+      animation: blink 1s step-end infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0; }
+    }
+
+    .hero-tagline {
+      font-size: clamp(14px, 2vw, 17px);
+      color: var(--ctp-subtext0);
+      margin-bottom: 36px;
+      font-weight: 400;
+      line-height: 1.6;
+    }
+
+    .hero-tagline em {
+      color: var(--ctp-subtext1);
+      font-style: normal;
+    }
+
+    .hero-stats {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      margin-bottom: 36px;
+      flex-wrap: wrap;
+    }
+
+    .hero-stat {
+      text-align: center;
+    }
+
+    .hero-stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .hero-stat:nth-child(1) .hero-stat-value { color: var(--ctp-teal); }
+    .hero-stat:nth-child(2) .hero-stat-value { color: var(--ctp-blue); }
+    .hero-stat:nth-child(3) .hero-stat-value { color: var(--ctp-mauve); }
+    .hero-stat:nth-child(4) .hero-stat-value { color: var(--ctp-red); }
+
+    .hero-stat-label {
+      font-size: 11px;
+      color: var(--ctp-overlay1);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 28px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: var(--ctp-teal);
+      color: var(--ctp-crust);
+      border-color: var(--ctp-teal);
+    }
+
+    .btn-primary:hover {
+      background: var(--ctp-sky);
+      border-color: var(--ctp-sky);
+      color: var(--ctp-crust);
+      box-shadow: 0 0 24px rgba(148, 226, 213, 0.25);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--ctp-subtext1);
+      border-color: var(--ctp-surface1);
+    }
+
+    .btn-ghost:hover {
+      color: var(--ctp-text);
+      border-color: var(--ctp-overlay0);
+      background: var(--ctp-surface0);
+    }
+
+    /* =========================================================
+       FEATURES GRID
+       ========================================================= */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .feature-card {
+      background: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 6px;
+      padding: 28px 24px;
+      transition: all 0.25s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--ctp-teal), transparent);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .feature-card:hover {
+      border-color: var(--ctp-surface1);
+      background: var(--ctp-base);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.4);
+    }
+
+    .feature-card:hover::before {
+      opacity: 1;
+    }
+
+    .feature-icon {
+      font-size: 24px;
+      margin-bottom: 16px;
+      display: block;
+      width: 44px;
+      height: 44px;
+      line-height: 44px;
+      text-align: center;
+      background: var(--ctp-surface0);
+      border-radius: 8px;
+      border: 1px solid var(--ctp-surface1);
+    }
+
+    .feature-card h3 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ctp-text);
+      margin-bottom: 8px;
+    }
+
+    .feature-card p {
+      font-size: 13px;
+      color: var(--ctp-subtext0);
+      line-height: 1.6;
+    }
+
+    .feature-card:nth-child(1):hover { border-color: var(--ctp-teal); }
+    .feature-card:nth-child(1):hover::before { background: linear-gradient(90deg, transparent, var(--ctp-teal), transparent); }
+
+    .feature-card:nth-child(2):hover { border-color: var(--ctp-sapphire); }
+    .feature-card:nth-child(2):hover::before { background: linear-gradient(90deg, transparent, var(--ctp-sapphire), transparent); }
+
+    .feature-card:nth-child(3):hover { border-color: var(--ctp-blue); }
+    .feature-card:nth-child(3):hover::before { background: linear-gradient(90deg, transparent, var(--ctp-blue), transparent); }
+
+    .feature-card:nth-child(4):hover { border-color: var(--ctp-mauve); }
+    .feature-card:nth-child(4):hover::before { background: linear-gradient(90deg, transparent, var(--ctp-mauve), transparent); }
+
+    .feature-card:nth-child(5):hover { border-color: var(--ctp-green); }
+    .feature-card:nth-child(5):hover::before { background: linear-gradient(90deg, transparent, var(--ctp-green), transparent); }
+
+    .feature-card:nth-child(6):hover { border-color: var(--ctp-peach); }
+    .feature-card:nth-child(6):hover::before { background: linear-gradient(90deg, transparent, var(--ctp-peach), transparent); }
+
+    /* =========================================================
+       ARCHITECTURE
+       ========================================================= */
+    .arch-terminal {
+      border: 1px solid var(--ctp-surface1);
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--ctp-mantle);
+      box-shadow: 0 16px 48px -12px rgba(0, 0, 0, 0.4);
+    }
+
+    .arch-titlebar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: var(--ctp-crust);
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+
+    .arch-titlebar-text {
+      flex: 1;
+      text-align: center;
+      font-size: 12px;
+      color: var(--ctp-overlay0);
+    }
+
+    .arch-body {
+      padding: 32px;
+    }
+
+    .arch-divider {
+      border: none;
+      border-top: 1px dashed var(--ctp-surface1);
+      margin: 28px 0;
+    }
+
+    /* ---- SSH handshake diagram ---- */
+    .ssh-diagram {
+      font-size: 13px;
+      line-height: 1.9;
+      overflow-x: auto;
+    }
+
+    .ssh-diagram pre {
+      font-family: 'JetBrains Mono', monospace;
+      margin: 0;
+      white-space: pre;
+    }
+
+    .ssh-diagram .d-label {
+      color: var(--ctp-overlay1);
+    }
+
+    .ssh-diagram .d-node {
+      color: var(--ctp-teal);
+      font-weight: 600;
+    }
+
+    .ssh-diagram .d-arrow {
+      color: var(--ctp-surface2);
+    }
+
+    .ssh-diagram .d-arrow-enc {
+      color: var(--ctp-mauve);
+    }
+
+    .ssh-diagram .d-msg {
+      color: var(--ctp-blue);
+    }
+
+    .ssh-diagram .d-note {
+      color: var(--ctp-overlay0);
+      font-style: italic;
+    }
+
+    .ssh-diagram .d-banner {
+      color: var(--ctp-green);
+    }
+
+    /* ---- Layer table ---- */
+    .layer-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .layer-table tr {
+      border-bottom: 1px solid var(--ctp-surface0);
+      transition: background 0.2s;
+    }
+
+    .layer-table tr:last-child {
+      border-bottom: none;
+    }
+
+    .layer-table tr:hover {
+      background: var(--ctp-base);
+    }
+
+    .layer-table td {
+      padding: 10px 16px;
+    }
+
+    .layer-table td:first-child {
+      color: var(--ctp-subtext1);
+      font-weight: 600;
+      white-space: nowrap;
+      width: 140px;
+    }
+
+    .layer-table td:last-child {
+      color: var(--ctp-subtext0);
+    }
+
+    /* =========================================================
+       INTERNALS / CAPABILITIES
+       ========================================================= */
+    .capabilities-section {
+      text-align: center;
+    }
+
+    .capabilities-terminal {
+      border: 1px solid var(--ctp-surface1);
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--ctp-mantle);
+      box-shadow:
+        0 0 0 1px var(--ctp-surface0),
+        0 32px 80px -16px rgba(0, 0, 0, 0.5),
+        0 0 160px -60px rgba(148, 226, 213, 0.06);
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .capabilities-titlebar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: var(--ctp-crust);
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+
+    .capabilities-titlebar-text {
+      flex: 1;
+      text-align: center;
+      font-size: 12px;
+      color: var(--ctp-overlay0);
+    }
+
+    .capabilities-body {
+      padding: 32px;
+    }
+
+    .capabilities-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .capability-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 4px;
+      background: var(--ctp-base);
+      font-size: 13px;
+      color: var(--ctp-subtext1);
+      transition: all 0.2s;
+    }
+
+    .capability-pill:hover {
+      border-color: var(--ctp-surface2);
+      background: var(--ctp-surface0);
+    }
+
+    .capability-pill .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .dot--crypto  { background: var(--ctp-teal); }
+    .dot--kex     { background: var(--ctp-blue); }
+    .dot--proto   { background: var(--ctp-mauve); }
+    .dot--chan     { background: var(--ctp-green); }
+    .dot--sftp    { background: var(--ctp-peach); }
+    .dot--sys     { background: var(--ctp-red); }
+
+    .capabilities-legend {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      flex-wrap: wrap;
+      font-size: 12px;
+      color: var(--ctp-overlay1);
+    }
+
+    .capabilities-legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* =========================================================
+       QUICK START
+       ========================================================= */
+    .start-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .start-terminal {
+      border: 1px solid var(--ctp-surface1);
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--ctp-mantle);
+      box-shadow: 0 16px 48px -12px rgba(0, 0, 0, 0.4);
+    }
+
+    .start-titlebar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: var(--ctp-crust);
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+
+    .start-titlebar-text {
+      flex: 1;
+      text-align: center;
+      font-size: 12px;
+      color: var(--ctp-overlay0);
+    }
+
+    .start-body {
+      padding: 28px 32px;
+    }
+
+    .start-line {
+      margin-bottom: 4px;
+      font-size: 14px;
+      line-height: 1.8;
+    }
+
+    .start-line .prompt {
+      color: var(--ctp-green);
+      user-select: none;
+    }
+
+    .start-line .cmd {
+      color: var(--ctp-text);
+    }
+
+    .start-line .comment {
+      color: var(--ctp-overlay0);
+    }
+
+    .start-line .flag {
+      color: var(--ctp-peach);
+    }
+
+    .start-line .arg {
+      color: var(--ctp-yellow);
+    }
+
+    .start-line .str {
+      color: var(--ctp-green);
+    }
+
+    .start-spacer {
+      height: 14px;
+    }
+
+    /* =========================================================
+       FOOTER
+       ========================================================= */
+    .site-footer {
+      border-top: 1px solid var(--ctp-surface0);
+      padding: 48px 0;
+      text-align: center;
+      margin-top: 32px;
+    }
+
+    .footer-tagline {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--ctp-subtext1);
+      margin-bottom: 8px;
+      letter-spacing: 0.02em;
+    }
+
+    .footer-sub {
+      font-size: 13px;
+      color: var(--ctp-overlay1);
+      margin-bottom: 28px;
+    }
+
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      font-size: 13px;
+      color: var(--ctp-overlay1);
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover {
+      color: var(--ctp-teal);
+    }
+
+    .footer-copy {
+      font-size: 12px;
+      color: var(--ctp-overlay0);
+    }
+
+    /* =========================================================
+       RESPONSIVE
+       ========================================================= */
+    @media (max-width: 900px) {
+      .features-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .hero-body {
+        padding: 36px 24px 44px;
+      }
+      .hero-stats {
+        gap: 24px;
+      }
+      .start-columns {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 600px) {
+      body {
+        font-size: 14px;
+      }
+      .page-wrap {
+        padding: 0 16px;
+      }
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+      .capabilities-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      section {
+        margin-bottom: 64px;
+      }
+      .hero {
+        padding: 48px 0 32px;
+      }
+      .hero-body {
+        padding: 28px 20px 36px;
+      }
+      .hero-buttons {
+        flex-direction: column;
+        align-items: center;
+      }
+      .btn {
+        width: 100%;
+        max-width: 260px;
+        justify-content: center;
+      }
+      .arch-body {
+        padding: 20px;
+      }
+      .start-body {
+        padding: 20px;
+      }
+      .start-line {
+        font-size: 12px;
+      }
+      .feature-card {
+        padding: 22px 20px;
+      }
+      .ssh-diagram {
+        font-size: 11px;
+      }
+    }
+
+    /* ---- Selection highlight ---- */
+    ::selection {
+      background: rgba(148, 226, 213, 0.25);
+      color: var(--ctp-text);
+    }
+
+    /* ---- Focus styles for accessibility ---- */
+    a:focus-visible,
+    .btn:focus-visible {
+      outline: 2px solid var(--ctp-teal);
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-wrap">
+
+  <!-- ============ HERO ============ -->
+  <section class="hero" id="top">
+    <div class="hero-terminal">
+      <div class="hero-titlebar">
+        <span class="hero-dot hero-dot--red"></span>
+        <span class="hero-dot hero-dot--yellow"></span>
+        <span class="hero-dot hero-dot--green"></span>
+        <span class="hero-titlebar-text">depth &mdash;&mdash; SSH-2.0 server</span>
+      </div>
+      <div class="hero-body">
+        <h1 class="hero-title">Depth<span class="hero-cursor" aria-hidden="true"></span></h1>
+        <p class="hero-tagline">
+          Full SSH-2.0 Protocol in Pure x86_64 Assembly.<br>
+          <em>Complete SSH implementation &mdash; KEX, auth, encrypted transport, PTY, SFTP, port forwarding, pipe exec &mdash; ~94 KB static ELF, no libc.</em>
+        </p>
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <div class="hero-stat-value">~94 KB</div>
+            <div class="hero-stat-label">Static ELF</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-value">22</div>
+            <div class="hero-stat-label">Source Files</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-value">268</div>
+            <div class="hero-stat-label">Passing Tests</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-value">0</div>
+            <div class="hero-stat-label">Dependencies</div>
+          </div>
+        </div>
+        <div class="hero-buttons">
+          <a href="https://github.com/Real-Fruit-Snacks/Depth" class="btn btn-primary">View Source</a>
+          <a href="#architecture" class="btn btn-ghost">Read Docs</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FEATURES ============ -->
+  <section id="features">
+    <span class="section-label">// capabilities</span>
+    <h2 class="section-title">Pure assembly. Full protocol.</h2>
+    <p class="section-desc">
+      Every byte handcrafted in NASM. No libc, no dynamic linking, no runtime. Complete SSH-2.0 with ChaCha20-Poly1305, Ed25519, SFTP, PTY, and port forwarding &mdash; all from scratch.
+    </p>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <span class="feature-icon" aria-hidden="true">&#128274;</span>
+        <h3>ChaCha20-Poly1305 AEAD</h3>
+        <p>Full chacha20-poly1305@openssh.com transport. Two-key scheme, sequence-number nonce. Every packet authenticated.</p>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-icon" aria-hidden="true">&#128273;</span>
+        <h3>Ed25519 + X25519</h3>
+        <p>Complete elliptic curve crypto from scratch. X25519 ECDH key exchange, Ed25519 host signatures, SHA-512 internals.</p>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-icon" aria-hidden="true">&#128260;</span>
+        <h3>Full SSH Protocol</h3>
+        <p>RFC 4253/4254: KEXINIT, ECDH, NEWKEYS, password auth, 8 multiplexed channels, window management.</p>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-icon" aria-hidden="true">&#128193;</span>
+        <h3>SFTP + PTY + Forwarding</h3>
+        <p>SFTPv3 file transfers, interactive PTY shells, pipe-based exec, local and remote TCP port forwarding.</p>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-icon" aria-hidden="true">&#128190;</span>
+        <h3>~94 KB Static Binary</h3>
+        <p>No libc, no dynamic linking. Pure Linux syscalls. 22 source files compile to one self-contained ELF.</p>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-icon" aria-hidden="true">&#9989;</span>
+        <h3>268 Passing Tests</h3>
+        <p>Every crypto primitive and protocol feature tested. Python harnesses drive NASM test binaries via binary protocol.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ARCHITECTURE ============ -->
+  <section id="architecture">
+    <span class="section-label">// architecture</span>
+    <h2 class="section-title">SSH handshake &amp; encrypted transport.</h2>
+    <p class="section-desc">
+      Full SSH-2.0 key exchange with curve25519-sha256, Ed25519 host authentication, and ChaCha20-Poly1305 encrypted transport &mdash; every packet authenticated and encrypted after NEWKEYS.
+    </p>
+
+    <div class="arch-terminal">
+      <div class="arch-titlebar">
+        <span class="hero-dot hero-dot--red"></span>
+        <span class="hero-dot hero-dot--yellow"></span>
+        <span class="hero-dot hero-dot--green"></span>
+        <span class="arch-titlebar-text">depth &mdash;&mdash; SSH-2.0 handshake</span>
+      </div>
+      <div class="arch-body">
+        <div class="ssh-diagram"><pre><span class="d-label">[Operator]                              [Target]</span>
+ <span class="d-node">OpenSSH</span>  <span class="d-arrow">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472; TCP &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&gt;</span>   <span class="d-node">depth (bind)</span>
+          <span class="d-arrow">&lt;&#9472;&#9472;</span> <span class="d-banner">SSH-2.0 banner</span> <span class="d-arrow">&#9472;&#9472;&#9472;&#9472;</span>
+          <span class="d-arrow">&#9472;&#9472;</span> <span class="d-msg">KEXINIT</span> <span class="d-arrow">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&gt;</span>
+          <span class="d-arrow">&lt;&#9472;&#9472;</span> <span class="d-msg">KEXINIT</span> <span class="d-arrow">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</span>
+          <span class="d-arrow">&#9472;&#9472;</span> <span class="d-msg">ECDH_INIT</span> <span class="d-arrow">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&gt;</span>
+          <span class="d-arrow">&lt;&#9472;&#9472;</span> <span class="d-msg">ECDH_REPLY</span> <span class="d-arrow">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</span>    <span class="d-note">(Ed25519 signed)</span>
+          <span class="d-arrow-enc">&#9552;&#9552;&#9552;</span> <span class="d-msg">encrypted</span> <span class="d-arrow-enc">&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&gt;</span>
+          <span class="d-arrow-enc">&lt;&#9552;&#9552;&#9552;</span> <span class="d-msg">encrypted</span> <span class="d-arrow-enc">&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;</span></pre></div>
+
+        <hr class="arch-divider">
+
+        <table class="layer-table">
+          <tr>
+            <td>Transport</td>
+            <td>Raw TCP via syscall</td>
+          </tr>
+          <tr>
+            <td>Encryption</td>
+            <td>chacha20-poly1305@openssh.com</td>
+          </tr>
+          <tr>
+            <td>Key Exchange</td>
+            <td>curve25519-sha256</td>
+          </tr>
+          <tr>
+            <td>Host Auth</td>
+            <td>ssh-ed25519</td>
+          </tr>
+          <tr>
+            <td>User Auth</td>
+            <td>Password (ssh-userauth)</td>
+          </tr>
+          <tr>
+            <td>Channels</td>
+            <td>8 multiplexed with window mgmt</td>
+          </tr>
+          <tr>
+            <td>Shell</td>
+            <td>PTY + pipe-based exec</td>
+          </tr>
+          <tr>
+            <td>SFTP</td>
+            <td>SFTPv3, 16 handles</td>
+          </tr>
+          <tr>
+            <td>Forwarding</td>
+            <td>Local + remote TCP</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ INTERNALS ============ -->
+  <section class="capabilities-section" id="internals">
+    <span class="section-label">// internals</span>
+    <h2 class="section-title">Every component from scratch.</h2>
+    <p class="section-desc" style="margin-left:auto;margin-right:auto;">
+      What makes Depth tick &mdash; every component implemented from scratch in assembly.
+    </p>
+
+    <div class="capabilities-terminal">
+      <div class="capabilities-titlebar">
+        <span class="hero-dot hero-dot--red"></span>
+        <span class="hero-dot hero-dot--yellow"></span>
+        <span class="hero-dot hero-dot--green"></span>
+        <span class="capabilities-titlebar-text">depth &mdash;&mdash; component map</span>
+      </div>
+      <div class="capabilities-body">
+        <div class="capabilities-grid">
+          <div class="capability-pill"><span class="dot dot--crypto"></span> ChaCha20 Quarter-Round</div>
+          <div class="capability-pill"><span class="dot dot--crypto"></span> ChaCha20 Block Cipher</div>
+          <div class="capability-pill"><span class="dot dot--crypto"></span> Poly1305 MAC</div>
+          <div class="capability-pill"><span class="dot dot--crypto"></span> AEAD Encrypt / Decrypt</div>
+          <div class="capability-pill"><span class="dot dot--kex"></span> X25519 ECDH</div>
+          <div class="capability-pill"><span class="dot dot--kex"></span> Ed25519 Sign / Verify</div>
+          <div class="capability-pill"><span class="dot dot--kex"></span> SHA-512 Internals</div>
+          <div class="capability-pill"><span class="dot dot--kex"></span> curve25519-sha256 KEX</div>
+          <div class="capability-pill"><span class="dot dot--proto"></span> SSH Binary Packet Protocol</div>
+          <div class="capability-pill"><span class="dot dot--proto"></span> KEXINIT Negotiation</div>
+          <div class="capability-pill"><span class="dot dot--proto"></span> NEWKEYS Transition</div>
+          <div class="capability-pill"><span class="dot dot--proto"></span> Password Auth (userauth)</div>
+          <div class="capability-pill"><span class="dot dot--chan"></span> Channel Multiplexing (8ch)</div>
+          <div class="capability-pill"><span class="dot dot--chan"></span> Window Management</div>
+          <div class="capability-pill"><span class="dot dot--chan"></span> PTY Allocation</div>
+          <div class="capability-pill"><span class="dot dot--chan"></span> Pipe-Based Exec</div>
+          <div class="capability-pill"><span class="dot dot--sftp"></span> SFTPv3 Subsystem</div>
+          <div class="capability-pill"><span class="dot dot--sftp"></span> 16 File Handles</div>
+          <div class="capability-pill"><span class="dot dot--sftp"></span> Local TCP Forwarding</div>
+          <div class="capability-pill"><span class="dot dot--sftp"></span> Remote TCP Forwarding</div>
+          <div class="capability-pill"><span class="dot dot--sys"></span> Raw Linux Syscalls</div>
+          <div class="capability-pill"><span class="dot dot--sys"></span> Static ELF (no libc)</div>
+          <div class="capability-pill"><span class="dot dot--sys"></span> /dev/urandom Entropy</div>
+          <div class="capability-pill"><span class="dot dot--sys"></span> epoll Event Loop</div>
+        </div>
+        <div class="capabilities-legend">
+          <span><span class="dot dot--crypto" style="display:inline-block;width:6px;height:6px;border-radius:50%;"></span> Crypto</span>
+          <span><span class="dot dot--kex" style="display:inline-block;width:6px;height:6px;border-radius:50%;"></span> Key Exchange</span>
+          <span><span class="dot dot--proto" style="display:inline-block;width:6px;height:6px;border-radius:50%;"></span> Protocol</span>
+          <span><span class="dot dot--chan" style="display:inline-block;width:6px;height:6px;border-radius:50%;"></span> Channels</span>
+          <span><span class="dot dot--sftp" style="display:inline-block;width:6px;height:6px;border-radius:50%;"></span> Services</span>
+          <span><span class="dot dot--sys" style="display:inline-block;width:6px;height:6px;border-radius:50%;"></span> System</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ QUICK START ============ -->
+  <section id="quick-start">
+    <span class="section-label">// quick start</span>
+    <h2 class="section-title">Build and connect.</h2>
+    <p class="section-desc">
+      Clone, build, run. Connect with any standard SSH client &mdash; OpenSSH, PuTTY, or libssh.
+    </p>
+
+    <div class="start-columns">
+      <div class="start-terminal">
+        <div class="start-titlebar">
+          <span class="hero-dot hero-dot--red"></span>
+          <span class="hero-dot hero-dot--yellow"></span>
+          <span class="hero-dot hero-dot--green"></span>
+          <span class="start-titlebar-text">bash &mdash;&mdash; build</span>
+        </div>
+        <div class="start-body">
+          <div class="start-line"><span class="comment"># Clone and build</span></div>
+          <div class="start-line"><span class="prompt">$</span> <span class="cmd">git clone </span><span class="arg">https://github.com/Real-Fruit-Snacks/Depth.git</span></div>
+          <div class="start-line"><span class="prompt">$</span> <span class="cmd">cd </span><span class="arg">Depth</span></div>
+          <div class="start-line"><span class="prompt">$</span> <span class="cmd">make</span></div>
+          <div class="start-line"><span class="prompt">$</span> <span class="cmd">make </span><span class="arg">test</span></div>
+        </div>
+      </div>
+
+      <div class="start-terminal">
+        <div class="start-titlebar">
+          <span class="hero-dot hero-dot--red"></span>
+          <span class="hero-dot hero-dot--yellow"></span>
+          <span class="hero-dot hero-dot--green"></span>
+          <span class="start-titlebar-text">bash &mdash;&mdash; connect</span>
+        </div>
+        <div class="start-body">
+          <div class="start-line"><span class="comment"># Start server and connect</span></div>
+          <div class="start-line"><span class="prompt">$</span> <span class="cmd">./build/depth</span></div>
+          <div class="start-line"><span class="prompt">$</span> <span class="cmd">ssh </span><span class="flag">-p </span><span class="arg">7777 </span><span class="cmd">svc@target</span></div>
+          <div class="start-line"><span class="prompt">$</span> <span class="cmd">ssh </span><span class="flag">-p </span><span class="arg">7777 </span><span class="cmd">svc@target </span><span class="str">'whoami'</span></div>
+          <div class="start-line"><span class="prompt">$</span> <span class="cmd">sftp </span><span class="flag">-P </span><span class="arg">7777 </span><span class="cmd">svc@target</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div><!-- /.page-wrap -->
+
+<!-- ============ FOOTER ============ -->
+<footer class="site-footer">
+  <div class="page-wrap">
+    <p class="footer-tagline">Pure assembly. Full protocol. All the way down.</p>
+    <p class="footer-sub">Depth &mdash; complete SSH-2.0 in ~94 KB of x86_64 NASM</p>
+    <div class="footer-links">
+      <a href="https://github.com/Real-Fruit-Snacks/Depth">GitHub</a>
+      <a href="#architecture">Documentation</a>
+    </div>
+    <p class="footer-copy">x86_64 NASM &middot; Linux &middot; SSH-2.0 &middot; ChaCha20-Poly1305 &middot; Ed25519 &middot; SFTP</p>
+    <p class="footer-copy" style="margin-top: 16px; max-width: 600px; margin-left: auto; margin-right: auto; line-height: 1.5;"><strong style="color: var(--ctp-subtext1);">For authorized use only.</strong> This tool is intended for legitimate security research, authorized penetration testing, and educational purposes. Unauthorized access to computer systems is illegal. Users are solely responsible for ensuring compliance with all applicable laws and obtaining proper authorization before use.</p>
+  </div>
+</footer>
+
+</body>
+</html>
