@@ -1,113 +1,134 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 220">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 220" fill="none">
   <defs>
-    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#74c7ec"/>
-      <stop offset="100%" style="stop-color:#b4befe"/>
+    <!-- Primary gradient: sapphire to lavender (3-stop, 40% mid) -->
+    <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#74c7ec"/>
+      <stop offset="40%" stop-color="#74c7ec"/>
+      <stop offset="100%" stop-color="#b4befe"/>
     </linearGradient>
-    <linearGradient id="barGrad1" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#74c7ec"/>
-      <stop offset="100%" style="stop-color:#89b4fa"/>
+
+    <!-- Accent gradient -->
+    <linearGradient id="g2" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#b4befe"/>
+      <stop offset="100%" stop-color="#74c7ec"/>
     </linearGradient>
-    <linearGradient id="barGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#89b4fa"/>
-      <stop offset="100%" style="stop-color:#89b4fa"/>
+
+    <!-- Icon gradient: vertical -->
+    <linearGradient id="g3" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#74c7ec"/>
+      <stop offset="50%" stop-color="#74c7ec"/>
+      <stop offset="100%" stop-color="#b4befe"/>
     </linearGradient>
-    <linearGradient id="barGrad3" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#89b4fa"/>
-      <stop offset="100%" style="stop-color:#b4befe"/>
+
+    <!-- Bar gradient: horizontal sapphire to lavender -->
+    <linearGradient id="gBar" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#74c7ec"/>
+      <stop offset="100%" stop-color="#b4befe"/>
     </linearGradient>
-    <linearGradient id="barGrad4" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#b4befe"/>
-      <stop offset="100%" style="stop-color:#b4befe"/>
-    </linearGradient>
-    <linearGradient id="barGrad5" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#b4befe"/>
-      <stop offset="100%" style="stop-color:#cba6f7"/>
-    </linearGradient>
-    <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#74c7ec"/>
-      <stop offset="100%" style="stop-color:#b4befe"/>
-    </linearGradient>
-    <filter id="glow">
-      <feGaussianBlur stdDeviation="3" result="blur"/>
-      <feMerge>
-        <feMergeNode in="blur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
+
+    <!-- Faint outer glow -->
+    <filter id="softglow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="6" result="blur"/>
+      <feFlood flood-color="#74c7ec" flood-opacity="0.15" result="color"/>
+      <feComposite in="color" in2="blur" operator="in" result="shadow"/>
+      <feComposite in="SourceGraphic" in2="shadow" operator="over"/>
     </filter>
   </defs>
 
-  <!-- Hexagonal frame -->
-  <polygon points="80,10 145,30 145,170 80,190 15,170 15,30"
-           fill="none" stroke="url(#accentGrad)" stroke-width="1.5" opacity="0.4"/>
+  <!-- ===================== LOGOMARK ===================== -->
+  <g transform="translate(58, 40)" filter="url(#softglow)">
 
-  <!-- Protocol stack layers - descending bars -->
-  <!-- Layer 1 (top - application) - widest -->
-  <rect x="35" y="48" width="90" height="6" rx="3" fill="url(#barGrad1)" opacity="0.9"/>
-  <!-- Application node -->
-  <circle cx="80" cy="51" r="3" fill="#74c7ec" filter="url(#glow)"/>
+    <!-- Hexagonal frame -->
+    <path d="M 80 6 L 140 38 L 140 102 L 80 134 L 20 102 L 20 38 Z"
+          fill="none" stroke="url(#g1)" stroke-width="1.5" opacity="0.4"/>
 
-  <!-- Connector line 1->2 -->
-  <line x1="80" y1="54" x2="80" y2="72" stroke="#89b4fa" stroke-width="0.8" opacity="0.5"/>
+    <!-- Inner hex subtle fill -->
+    <path d="M 80 14 L 134 42 L 134 98 L 80 126 L 26 98 L 26 42 Z"
+          fill="#74c7ec" opacity="0.04"/>
 
-  <!-- Layer 2 (transport) -->
-  <rect x="40" y="72" width="80" height="6" rx="3" fill="url(#barGrad2)" opacity="0.8"/>
+    <!-- === PROTOCOL STACK === -->
 
-  <!-- Connector line 2->3 -->
-  <line x1="80" y1="78" x2="80" y2="96" stroke="#89b4fa" stroke-width="0.8" opacity="0.45"/>
+    <!-- Layer 1 (top, widest) — Application -->
+    <rect x="32" y="30" width="96" height="5" rx="2.5"
+          fill="url(#gBar)" opacity="0.9"/>
 
-  <!-- Layer 3 (channel) -->
-  <rect x="45" y="96" width="70" height="6" rx="3" fill="url(#barGrad3)" opacity="0.7"/>
+    <!-- Connector 1-2 -->
+    <line x1="80" y1="35" x2="80" y2="48"
+          stroke="#89b4fa" stroke-width="0.8" opacity="0.4"/>
 
-  <!-- Connector line 3->4 -->
-  <line x1="80" y1="102" x2="80" y2="120" stroke="#b4befe" stroke-width="0.8" opacity="0.4"/>
+    <!-- Layer 2 — Transport -->
+    <rect x="38" y="48" width="84" height="5" rx="2.5"
+          fill="url(#gBar)" opacity="0.78"/>
 
-  <!-- Layer 4 (encryption) -->
-  <rect x="50" y="120" width="60" height="6" rx="3" fill="url(#barGrad4)" opacity="0.6"/>
+    <!-- Connector 2-3 -->
+    <line x1="80" y1="53" x2="80" y2="66"
+          stroke="#89b4fa" stroke-width="0.8" opacity="0.35"/>
 
-  <!-- Connector line 4->5 -->
-  <line x1="80" y1="126" x2="80" y2="144" stroke="#b4befe" stroke-width="0.8" opacity="0.35"/>
+    <!-- Layer 3 — Channel -->
+    <rect x="44" y="66" width="72" height="5" rx="2.5"
+          fill="url(#gBar)" opacity="0.65"/>
 
-  <!-- Layer 5 (bottom - crypto foundation) - narrowest -->
-  <rect x="57" y="144" width="46" height="6" rx="3" fill="url(#barGrad5)" opacity="0.55"/>
-  <!-- Crypto foundation bright node -->
-  <circle cx="80" cy="147" r="5" fill="none" stroke="#b4befe" stroke-width="1" opacity="0.6"/>
-  <circle cx="80" cy="147" r="2.5" fill="#b4befe" filter="url(#glow)"/>
+    <!-- Connector 3-4 -->
+    <line x1="80" y1="71" x2="80" y2="84"
+          stroke="#b4befe" stroke-width="0.8" opacity="0.3"/>
 
-  <!-- Entry/exit nodes on frame -->
-  <circle cx="15" cy="60" r="3" fill="#74c7ec" opacity="0.7"/>
-  <circle cx="145" cy="60" r="3" fill="#74c7ec" opacity="0.7"/>
-  <circle cx="15" cy="140" r="3" fill="#b4befe" opacity="0.7"/>
-  <circle cx="145" cy="140" r="3" fill="#b4befe" opacity="0.7"/>
+    <!-- Layer 4 — Encryption -->
+    <rect x="50" y="84" width="60" height="5" rx="2.5"
+          fill="url(#gBar)" opacity="0.55"/>
 
-  <!-- Particle dots scattered between layers -->
-  <circle cx="52" cy="63" r="1.2" fill="#74c7ec" opacity="0.4"/>
-  <circle cx="105" cy="67" r="1.5" fill="#89b4fa" opacity="0.35"/>
-  <circle cx="42" cy="87" r="1.2" fill="#89b4fa" opacity="0.3"/>
-  <circle cx="112" cy="85" r="1.4" fill="#89b4fa" opacity="0.35"/>
-  <circle cx="58" cy="109" r="1.3" fill="#b4befe" opacity="0.3"/>
-  <circle cx="100" cy="112" r="1.2" fill="#b4befe" opacity="0.25"/>
-  <circle cx="68" cy="134" r="1.5" fill="#b4befe" opacity="0.3"/>
-  <circle cx="95" cy="136" r="1.2" fill="#b4befe" opacity="0.25"/>
-  <circle cx="48" cy="155" r="1.3" fill="#cba6f7" opacity="0.2"/>
-  <circle cx="110" cy="152" r="1.4" fill="#cba6f7" opacity="0.2"/>
+    <!-- Connector 4-5 -->
+    <line x1="80" y1="89" x2="80" y2="102"
+          stroke="#b4befe" stroke-width="0.8" opacity="0.25"/>
 
-  <!-- Side connector lines (data flowing into stack) -->
-  <line x1="18" y1="60" x2="35" y2="51" stroke="#74c7ec" stroke-width="0.6" opacity="0.3"/>
-  <line x1="142" y1="60" x2="125" y2="51" stroke="#74c7ec" stroke-width="0.6" opacity="0.3"/>
-  <line x1="18" y1="140" x2="57" y2="147" stroke="#b4befe" stroke-width="0.6" opacity="0.3"/>
-  <line x1="142" y1="140" x2="103" y2="147" stroke="#b4befe" stroke-width="0.6" opacity="0.3"/>
+    <!-- Layer 5 (bottom, narrowest) — Crypto foundation -->
+    <rect x="56" y="102" width="48" height="5" rx="2.5"
+          fill="url(#gBar)" opacity="0.45"/>
 
-  <!-- Typography -->
-  <!-- Project name -->
-  <text x="200" y="112" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="76" font-weight="800" letter-spacing="18" fill="url(#textGrad)">DEPTH</text>
+    <!-- Top layer accent node -->
+    <circle cx="80" cy="32" r="2.5" fill="#74c7ec" opacity="0.8"/>
 
-  <!-- Separator line -->
-  <line x1="200" y1="132" x2="580" y2="132" stroke="url(#accentGrad)" stroke-width="0.8" opacity="0.25"/>
+    <!-- Bottom layer accent ring -->
+    <circle cx="80" cy="105" r="4" fill="none" stroke="#b4befe" stroke-width="0.8" opacity="0.5"/>
+    <circle cx="80" cy="105" r="2" fill="#b4befe" opacity="0.7"/>
+
+    <!-- Scattered particles between layers -->
+    <circle cx="52" cy="42" r="1.2" fill="#74c7ec" opacity="0.3"/>
+    <circle cx="108" cy="40" r="1.3" fill="#89b4fa" opacity="0.25"/>
+    <circle cx="46" cy="59" r="1.1" fill="#89b4fa" opacity="0.22"/>
+    <circle cx="112" cy="57" r="1.2" fill="#89b4fa" opacity="0.25"/>
+    <circle cx="55" cy="77" r="1.0" fill="#b4befe" opacity="0.2"/>
+    <circle cx="105" cy="75" r="1.1" fill="#b4befe" opacity="0.2"/>
+    <circle cx="62" cy="95" r="1.2" fill="#b4befe" opacity="0.18"/>
+    <circle cx="98" cy="93" r="1.1" fill="#b4befe" opacity="0.18"/>
+    <circle cx="68" cy="112" r="1.0" fill="#b4befe" opacity="0.15"/>
+    <circle cx="92" cy="114" r="1.0" fill="#b4befe" opacity="0.15"/>
+
+    <!-- Corner accents on hex -->
+    <circle cx="80" cy="6" r="2" fill="#74c7ec" opacity="0.3"/>
+    <circle cx="80" cy="134" r="2" fill="#b4befe" opacity="0.3"/>
+  </g>
+
+  <!-- ===================== TYPOGRAPHY ===================== -->
+
+  <!-- "DEPTH" -->
+  <text x="415" y="108"
+        font-family="'SF Pro Display', 'Inter', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
+        font-size="76" font-weight="800" letter-spacing="18"
+        fill="url(#g1)" text-anchor="middle">DEPTH</text>
+
+  <!-- Thin separator line -->
+  <line x1="280" y1="128" x2="550" y2="128"
+        stroke="url(#g1)" stroke-width="0.8" opacity="0.25"/>
 
   <!-- Tagline -->
-  <text x="200" y="155" font-family="'JetBrains Mono','SF Mono','Cascadia Code',monospace" font-size="11.5" letter-spacing="5.5" fill="#a6adc8">SSH-2.0 IN PURE ASSEMBLY</text>
+  <text x="415" y="152"
+        font-family="'SF Mono', 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace"
+        font-size="11.5" font-weight="400" letter-spacing="5.5"
+        fill="#7f849c" text-anchor="middle">SSH-2.0 IN PURE ASSEMBLY</text>
 
-  <!-- Descriptors -->
-  <text x="200" y="175" font-family="'JetBrains Mono','SF Mono','Cascadia Code',monospace" font-size="9" letter-spacing="3" fill="#6c7086">NASM · ED25519 · X25519 · 94KB</text>
+  <!-- Descriptor -->
+  <text x="415" y="172"
+        font-family="'SF Mono', 'JetBrains Mono', 'Fira Code', monospace"
+        font-size="9" font-weight="400" letter-spacing="3"
+        fill="#585b70" text-anchor="middle">NASM  ·  ED25519  ·  X25519  ·  94KB</text>
 </svg>
