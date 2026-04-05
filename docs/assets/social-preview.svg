@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#11111b"/>
+      <stop offset="100%" stop-color="#1e1e2e"/>
+    </linearGradient>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#74c7ec"/>
+      <stop offset="50%" stop-color="#89b4fa"/>
+      <stop offset="100%" stop-color="#b4befe"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="45%" r="35%">
+      <stop offset="0%" stop-color="#74c7ec" stop-opacity="0.12"/>
+      <stop offset="50%" stop-color="#89b4fa" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#b4befe" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="textglow">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+  <rect width="1280" height="640" fill="url(#bg)"/>
+  <rect width="1280" height="640" fill="url(#glow)"/>
+  <line x1="0" y1="1" x2="1280" y2="1" stroke="url(#grad)" stroke-width="2" opacity="0.6"/>
+  <text x="640" y="280" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="120" font-weight="800" fill="url(#grad)" letter-spacing="12" filter="url(#textglow)">DEPTH</text>
+  <line x1="440" y1="310" x2="840" y2="310" stroke="url(#grad)" stroke-width="0.8" opacity="0.25"/>
+  <text x="640" y="365" text-anchor="middle" font-family="Consolas, Courier New, monospace" font-size="22" font-weight="400" fill="#7f849c" letter-spacing="8">SSH-2.0 IN PURE ASSEMBLY</text>
+  <text x="640" y="415" text-anchor="middle" font-family="Consolas, Courier New, monospace" font-size="16" font-weight="400" fill="#585b70" letter-spacing="5">NASM  ·  ED25519  ·  X25519  ·  94KB</text>
+</svg>
