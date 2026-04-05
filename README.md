@@ -1,26 +1,24 @@
 <div align="center">
 
-<img src="docs/banner.svg" alt="Depth" width="800">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Real-Fruit-Snacks/Depth/main/docs/assets/logo-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/Real-Fruit-Snacks/Depth/main/docs/assets/logo-light.svg">
+  <img alt="Depth" src="https://raw.githubusercontent.com/Real-Fruit-Snacks/Depth/main/docs/assets/logo-dark.svg" width="520">
+</picture>
 
-<br>
+![Assembly](https://img.shields.io/badge/language-Assembly-6E4C13.svg)
+![Platform](https://img.shields.io/badge/platform-Linux%20x86__64-lightgrey)
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
 
-Depth is a complete SSH-2.0 protocol implementation written entirely in x86_64 NASM assembly. A ~94 KB statically-linked ELF binary handles key exchange (Curve25519), host authentication (Ed25519), encrypted transport (ChaCha20-Poly1305), interactive shells (PTY), remote command execution, SFTP file transfers, and TCP port forwarding — all built from scratch with pure Linux syscalls, zero libc, zero dependencies.
+**Complete SSH-2.0 protocol implementation in pure x86_64 NASM assembly**
+
+~94 KB statically-linked ELF binary. Key exchange (X25519), host authentication (Ed25519), encrypted transport (ChaCha20-Poly1305), interactive shells (PTY), SFTP file transfers, TCP port forwarding. Zero libc. Zero dependencies. Pure Linux syscalls.
+
+> **Authorization Required**: This tool is designed exclusively for authorized security testing with explicit written permission. Unauthorized access to computer systems is illegal and may result in criminal prosecution.
+
+[Quick Start](#quick-start) • [Wire Protocol](#wire-protocol) • [Internals](#internals) • [Architecture](#architecture) • [Security](#security)
 
 </div>
-
-<br>
-
-## Table of Contents
-
-- [Highlights](#highlights)
-- [Quick Start](#quick-start)
-- [Architecture](#architecture)
-- [Configuration](#configuration)
-- [Wire Protocol](#wire-protocol)
-- [Internals](#internals)
-- [Testing](#testing)
-- [Project Structure](#project-structure)
-- [Future Work](#future-work)
 
 ---
 
@@ -30,55 +28,31 @@ Depth is a complete SSH-2.0 protocol implementation written entirely in x86_64 N
 <tr>
 <td width="50%">
 
-### ChaCha20-Poly1305 AEAD
+**ChaCha20-Poly1305 AEAD**
 Full `chacha20-poly1305@openssh.com` transport encryption. Two-key scheme: K1 encrypts payload (counter=1), K2 encrypts packet length (counter=0). Sequence-number nonce. Every packet authenticated — tampered data rejected before decryption.
 
-</td>
-<td width="50%">
-
-### Ed25519 + X25519
+**Ed25519 + X25519**
 Complete elliptic curve cryptography from scratch. X25519 Diffie-Hellman for key exchange, Ed25519 for host key signatures. SHA-512 for Ed25519 internals, SHA-256 for exchange hash. All field arithmetic in pure assembly.
 
-</td>
-</tr>
-<tr>
-<td width="50%">
-
-### Full SSH Protocol Stack
+**Full SSH Protocol Stack**
 RFC 4253/4254 compliant: version exchange, algorithm negotiation (KEXINIT), ECDH key exchange, NEWKEYS, service request, password authentication, channel multiplexing (up to 8 concurrent), PTY allocation, shell/exec requests, window management.
 
-</td>
-<td width="50%">
-
-### ~94 KB Static Binary
+**~94 KB Static Binary**
 The entire implementation — crypto primitives, SSH protocol, PTY handling, SFTP, port forwarding, TLS 1.3 — compiles to a ~94 KB statically-linked ELF. No libc, no dynamic linking, no runtime dependencies. Pure Linux syscalls via `syscall` instruction.
 
 </td>
-</tr>
-<tr>
 <td width="50%">
 
-### SFTP File Transfers
+**SFTP File Transfers**
 Full SFTPv3 implementation: open, read, write, close, stat, fstat, lstat, setstat, opendir, readdir, remove, mkdir, rmdir, rename, realpath. Handles concurrent shell + SFTP sessions through event-loop integration.
 
-</td>
-<td width="50%">
-
-### TCP Port Forwarding
+**TCP Port Forwarding**
 Both local (`ssh -L`) and remote (`ssh -R`) forwarding. Direct-tcpip channels for local forward, global request handling for remote forward with accept loop and forwarded-tcpip channel opens. Multiplexed alongside shell/SFTP channels.
 
-</td>
-</tr>
-<tr>
-<td width="50%">
-
-### Interactive PTY Shell
+**Interactive PTY Shell**
 Full pseudoterminal support via `/dev/ptmx`: allocate master/slave pair, fork, setsid, set controlling terminal, dup2 stdio, execve `/bin/bash`. Poll-based I/O relay between PTY master and SSH channel with child process lifecycle management.
 
-</td>
-<td width="50%">
-
-### Pipe-Based Command Execution
+**Pipe-Based Command Execution**
 Non-interactive `ssh target 'cmd'` without PTY. Creates stdin/stdout pipes, forks, executes via `bash -c`. Graceful EOF handling: close stdin pipe to signal child, drain buffered output, wait for natural exit with SIGKILL fallback.
 
 </td>
@@ -91,19 +65,48 @@ Non-interactive `ssh target 'cmd'` without PTY. Creates stdin/stdout pipes, fork
 
 ### Prerequisites
 
-| Requirement | Version |
-|-------------|---------|
-| NASM | Latest |
-| GNU ld | Any (static linking) |
-| GCC | Any (for `sc_reduce_c.c` helper) |
-| Python | >= 3.8 (for tests) |
-| pytest | `pip install pytest` |
-| cryptography | `pip install cryptography` |
+<table>
+<tr>
+<th>Requirement</th>
+<th>Version</th>
+<th>Purpose</th>
+</tr>
+<tr>
+<td>NASM</td>
+<td>Latest</td>
+<td>x86_64 assembler</td>
+</tr>
+<tr>
+<td>GNU ld</td>
+<td>Any</td>
+<td>Static ELF linking</td>
+</tr>
+<tr>
+<td>GCC</td>
+<td>Any</td>
+<td>Ed25519 scalar reduction helper (<code>sc_reduce_c.c</code>)</td>
+</tr>
+<tr>
+<td>Python</td>
+<td>>= 3.8</td>
+<td>Test runner</td>
+</tr>
+<tr>
+<td>pytest</td>
+<td>Latest</td>
+<td><code>pip install pytest</code></td>
+</tr>
+<tr>
+<td>cryptography</td>
+<td>Latest</td>
+<td><code>pip install cryptography</code></td>
+</tr>
+</table>
 
-### Build & Run
+### Build
 
 ```bash
-# Clone
+# Clone repository
 git clone https://github.com/Real-Fruit-Snacks/Depth.git
 cd Depth
 
@@ -113,6 +116,14 @@ make
 # Run tests (268 tests)
 make test
 
+# Verify binary
+file build/depth
+# build/depth: ELF 64-bit LSB executable, x86-64, statically linked
+```
+
+### Verification
+
+```bash
 # Run the binary (bind mode, port 7777)
 ./build/depth
 
@@ -122,10 +133,10 @@ ssh -p 7777 svc@target
 # Non-interactive command execution
 ssh -p 7777 svc@target 'whoami'
 
-# SFTP
+# SFTP file transfer
 sftp -P 7777 svc@target
 
-# Port forwarding
+# Local port forwarding
 ssh -L 8080:internal:80 -p 7777 svc@target
 ```
 
@@ -141,40 +152,6 @@ ssh_password:   db "changeme"
 bind_mode:      db 1               ; 0=reverse, 1=bind
 bind_port:      dw 7777
 ```
-
----
-
-## Architecture
-
-```
-[Operator]                              [Target]
- OpenSSH  ──────── TCP ──────────>   depth (bind mode)
-          <── SSH-2.0 banner ────
-          ── KEXINIT ───────────>
-          <── KEXINIT ──────────
-          ── ECDH_INIT ─────────>
-          <── ECDH_REPLY ───────    (Ed25519 signed)
-          ── NEWKEYS ───────────>
-          <── NEWKEYS ──────────
-          ══ encrypted channel ══>
-          <══ encrypted channel ══
-```
-
-| Layer | Implementation |
-|-------|----------------|
-| **Transport** | Raw TCP via Linux syscalls (`socket`, `connect`, `bind`, `listen`, `accept`) |
-| **Encryption** | `chacha20-poly1305@openssh.com` — two-key AEAD, sequence-number nonce |
-| **Key Exchange** | Curve25519 ECDH (`curve25519-sha256`), SHA-256 exchange hash |
-| **Host Auth** | Ed25519 signatures (`ssh-ed25519`), SHA-512 internals |
-| **User Auth** | Password authentication (`ssh-userauth` service) |
-| **Channels** | Up to 8 multiplexed channels with independent window management |
-| **Shell** | PTY via `/dev/ptmx`, poll-based I/O relay, child lifecycle management |
-| **Exec** | Pipe-based `bash -c` for non-interactive commands, stdout/stderr merged |
-| **SFTP** | SFTPv3 with 16 file handle slots, event-loop integrated |
-| **Forwarding** | Local (`direct-tcpip`) and remote (`tcpip-forward`) TCP forwarding |
-| **TLS** | Optional TLS 1.3 wrapping (X25519 + ChaCha20-Poly1305) via I/O dispatch |
-| **Key Derivation** | HKDF-SHA256 with RFC 4253 key derivation (A-F letters) |
-| **MAC** | `hmac-sha2-256` advertised for compatibility (implicit with AEAD cipher) |
 
 ---
 
@@ -224,34 +201,76 @@ Client                              Server
 
 All cryptography implemented from scratch in x86_64 assembly:
 
-| Primitive | File | Description |
-|-----------|------|-------------|
-| SHA-256 | `sha256.asm` | FIPS 180-4, used for exchange hash and key derivation |
-| SHA-512 | `sha512.asm` | Used internally by Ed25519 |
-| X25519 | `curve25519.asm` | Curve25519 scalar multiplication for ECDH |
-| Ed25519 | `ed25519.asm` | Edwards-curve signatures (sign + verify) |
-| ChaCha20 | `ssh_aead.asm` | 20-round stream cipher, 256-bit key |
-| Poly1305 | `ssh_aead.asm` | One-time MAC, mod 2^130-5 arithmetic |
-| HMAC-SHA256 | `hmac_sha256.asm` | Used by HKDF for key derivation |
-| HKDF | `hkdf.asm` | RFC 5869 extract-and-expand |
+<table>
+<tr>
+<th>Primitive</th>
+<th>File</th>
+<th>Description</th>
+</tr>
+<tr>
+<td>SHA-256</td>
+<td><code>sha256.asm</code></td>
+<td>FIPS 180-4, used for exchange hash and key derivation</td>
+</tr>
+<tr>
+<td>SHA-512</td>
+<td><code>sha512.asm</code></td>
+<td>Used internally by Ed25519</td>
+</tr>
+<tr>
+<td>X25519</td>
+<td><code>curve25519.asm</code></td>
+<td>Curve25519 scalar multiplication for ECDH</td>
+</tr>
+<tr>
+<td>Ed25519</td>
+<td><code>ed25519.asm</code></td>
+<td>Edwards-curve signatures (sign + verify)</td>
+</tr>
+<tr>
+<td>ChaCha20</td>
+<td><code>ssh_aead.asm</code></td>
+<td>20-round stream cipher, 256-bit key</td>
+</tr>
+<tr>
+<td>Poly1305</td>
+<td><code>ssh_aead.asm</code></td>
+<td>One-time MAC, mod 2^130-5 arithmetic</td>
+</tr>
+<tr>
+<td>HMAC-SHA256</td>
+<td><code>hmac_sha256.asm</code></td>
+<td>Used by HKDF for key derivation</td>
+</tr>
+<tr>
+<td>HKDF</td>
+<td><code>hkdf.asm</code></td>
+<td>RFC 5869 extract-and-expand</td>
+</tr>
+</table>
 
 ### Channel Multiplexing
 
 Each channel occupies a 48-byte state structure:
 
-| Offset | Field | Description |
-|--------|-------|-------------|
-| 0 | `LOCAL_ID` | Our channel number (0-7) |
-| 4 | `REMOTE_ID` | Peer's channel number |
-| 8 | `LOCAL_WINDOW` | Bytes we can still receive |
-| 12 | `REMOTE_WINDOW` | Bytes we can still send |
-| 16 | `LOCAL_MAXPKT` | Our max packet size |
-| 20 | `REMOTE_MAXPKT` | Peer's max packet size |
-| 24 | `WRITE_FD` | Write fd (PTY master or stdin pipe) |
-| 28 | `CHILD_PID` | Shell/exec child process ID |
-| 32 | `FLAGS` | Channel state flags |
-| 36 | `TYPE` | 0=unused, 1=session, 2=direct-tcp, 3=sftp |
-| 40 | `FD` | Read fd (PTY master or stdout pipe) |
+<table>
+<tr>
+<th>Offset</th>
+<th>Field</th>
+<th>Description</th>
+</tr>
+<tr><td>0</td><td><code>LOCAL_ID</code></td><td>Our channel number (0-7)</td></tr>
+<tr><td>4</td><td><code>REMOTE_ID</code></td><td>Peer's channel number</td></tr>
+<tr><td>8</td><td><code>LOCAL_WINDOW</code></td><td>Bytes we can still receive</td></tr>
+<tr><td>12</td><td><code>REMOTE_WINDOW</code></td><td>Bytes we can still send</td></tr>
+<tr><td>16</td><td><code>LOCAL_MAXPKT</code></td><td>Our max packet size</td></tr>
+<tr><td>20</td><td><code>REMOTE_MAXPKT</code></td><td>Peer's max packet size</td></tr>
+<tr><td>24</td><td><code>WRITE_FD</code></td><td>Write fd (PTY master or stdin pipe)</td></tr>
+<tr><td>28</td><td><code>CHILD_PID</code></td><td>Shell/exec child process ID</td></tr>
+<tr><td>32</td><td><code>FLAGS</code></td><td>Channel state flags</td></tr>
+<tr><td>36</td><td><code>TYPE</code></td><td>0=unused, 1=session, 2=direct-tcp, 3=sftp</td></tr>
+<tr><td>40</td><td><code>FD</code></td><td>Read fd (PTY master or stdout pipe)</td></tr>
+</table>
 
 ### I/O Dispatch
 
@@ -271,13 +290,18 @@ All SSH protocol code calls through `io_read_fn` / `io_write_fn`, enabling trans
 
 The v2 event loop allocates ~38 KB on the stack:
 
-| Offset | Size | Purpose |
-|--------|------|---------|
-| `+0` | 32 KB | Receive/send buffer (encrypted packets) |
-| `+32896` | 1 KB | Packet construction workspace |
-| `+33920` | 104 B | pollfd array (13 entries: 1 ssh + 8 channels + 4 forwards) |
-| `+34024` | 4 KB | I/O relay buffer |
-| `+38128` | 16 B | PTY fd storage |
+<table>
+<tr>
+<th>Offset</th>
+<th>Size</th>
+<th>Purpose</th>
+</tr>
+<tr><td><code>+0</code></td><td>32 KB</td><td>Receive/send buffer (encrypted packets)</td></tr>
+<tr><td><code>+32896</code></td><td>1 KB</td><td>Packet construction workspace</td></tr>
+<tr><td><code>+33920</code></td><td>104 B</td><td>pollfd array (13 entries: 1 ssh + 8 channels + 4 forwards)</td></tr>
+<tr><td><code>+34024</code></td><td>4 KB</td><td>I/O relay buffer</td></tr>
+<tr><td><code>+38128</code></td><td>16 B</td><td>PTY fd storage</td></tr>
+</table>
 
 ---
 
@@ -285,34 +309,37 @@ The v2 event loop allocates ~38 KB on the stack:
 
 ### Test Suite (268 Tests)
 
-| Category | Tests | Description |
-|----------|-------|-------------|
-| SHA-256 | 8 | NIST vectors, empty input, streaming, large data |
-| SHA-512 | 6 | NIST vectors, empty input, large data |
-| X25519 | 7 | RFC 7748 vectors, all-zero rejection, identity |
-| Ed25519 | 9 | RFC 8032 vectors, sign/verify roundtrip, invalid signatures |
-| HMAC-SHA256 | 6 | RFC 4231 vectors, key lengths |
-| HKDF | 6 | RFC 5869 vectors, extract/expand |
-| SSH Encode | 14 | mpint, string, uint32 encoding/decoding |
-| SSH AEAD | 15 | Encrypt/decrypt roundtrip, MAC verification, tamper detection |
-| SSH Transport | 24 | Packet framing, KEXINIT building, name-list parsing |
-| SSH KEX | 8 | Client/server key exchange, shared secret derivation |
-| SSH Auth | 10 | Password auth, none probe, multi-attempt |
-| SSH Channel | 14 | Open/confirm, data transfer, window management, EOF/close |
-| SSH PTY | 12 | PTY allocation, shell spawn, pipe exec (8 tests), relay |
-| SSH E2E | 4 | Build verification, ELF validation, full session |
-| SSH Multi-channel | 6 | Concurrent channels, independent data streams |
-| SSH Forwarding | 10 | Local forward, direct-tcpip channels |
-| Remote Forward | 5 | Remote forward setup, forwarded-tcpip |
-| SFTP | 12 | File operations, directory listing, read/write |
-| Bind Mode | 8 | Server-mode operation, accept loop |
-| Master Socket | 5 | Connection multiplexing |
-| TLS 1.3 | 4 | Handshake, encrypted SSH over TLS |
-| SNI/ALPN | 2 | TLS server name indication |
-| Stress | 53 | Rapid I/O, large transfers, concurrent operations |
-| Pubkey Auth | 5 | Ed25519 public key authentication flow |
-
-### Running Tests
+<table>
+<tr>
+<th>Category</th>
+<th>Tests</th>
+<th>Description</th>
+</tr>
+<tr><td>SHA-256</td><td>8</td><td>NIST vectors, empty input, streaming, large data</td></tr>
+<tr><td>SHA-512</td><td>6</td><td>NIST vectors, empty input, large data</td></tr>
+<tr><td>X25519</td><td>7</td><td>RFC 7748 vectors, all-zero rejection, identity</td></tr>
+<tr><td>Ed25519</td><td>9</td><td>RFC 8032 vectors, sign/verify roundtrip, invalid signatures</td></tr>
+<tr><td>HMAC-SHA256</td><td>6</td><td>RFC 4231 vectors, key lengths</td></tr>
+<tr><td>HKDF</td><td>6</td><td>RFC 5869 vectors, extract/expand</td></tr>
+<tr><td>SSH Encode</td><td>14</td><td>mpint, string, uint32 encoding/decoding</td></tr>
+<tr><td>SSH AEAD</td><td>15</td><td>Encrypt/decrypt roundtrip, MAC verification, tamper detection</td></tr>
+<tr><td>SSH Transport</td><td>24</td><td>Packet framing, KEXINIT building, name-list parsing</td></tr>
+<tr><td>SSH KEX</td><td>8</td><td>Client/server key exchange, shared secret derivation</td></tr>
+<tr><td>SSH Auth</td><td>10</td><td>Password auth, none probe, multi-attempt</td></tr>
+<tr><td>SSH Channel</td><td>14</td><td>Open/confirm, data transfer, window management, EOF/close</td></tr>
+<tr><td>SSH PTY</td><td>12</td><td>PTY allocation, shell spawn, pipe exec, relay</td></tr>
+<tr><td>SSH E2E</td><td>4</td><td>Build verification, ELF validation, full session</td></tr>
+<tr><td>SSH Multi-channel</td><td>6</td><td>Concurrent channels, independent data streams</td></tr>
+<tr><td>SSH Forwarding</td><td>10</td><td>Local forward, direct-tcpip channels</td></tr>
+<tr><td>Remote Forward</td><td>5</td><td>Remote forward setup, forwarded-tcpip</td></tr>
+<tr><td>SFTP</td><td>12</td><td>File operations, directory listing, read/write</td></tr>
+<tr><td>Bind Mode</td><td>8</td><td>Server-mode operation, accept loop</td></tr>
+<tr><td>Master Socket</td><td>5</td><td>Connection multiplexing</td></tr>
+<tr><td>TLS 1.3</td><td>4</td><td>Handshake, encrypted SSH over TLS</td></tr>
+<tr><td>SNI/ALPN</td><td>2</td><td>TLS server name indication</td></tr>
+<tr><td>Stress</td><td>53</td><td>Rapid I/O, large transfers, concurrent operations</td></tr>
+<tr><td>Pubkey Auth</td><td>5</td><td>Ed25519 public key authentication flow</td></tr>
+</table>
 
 ```bash
 # All tests
@@ -330,7 +357,21 @@ Each test category has a NASM test harness (`.asm`) that exposes assembly functi
 
 ---
 
-## Project Structure
+## Architecture
+
+```
+[Operator]                              [Target]
+ OpenSSH  ──────── TCP ──────────>   depth (bind mode)
+          <── SSH-2.0 banner ────
+          ── KEXINIT ───────────>
+          <── KEXINIT ──────────
+          ── ECDH_INIT ─────────>
+          <── ECDH_REPLY ───────    (Ed25519 signed)
+          ── NEWKEYS ───────────>
+          <── NEWKEYS ──────────
+          ══ encrypted channel ══>
+          <══ encrypted channel ══
+```
 
 ```
 Depth/
@@ -375,6 +416,94 @@ Depth/
     └── banner.svg          # Repository banner
 ```
 
+### Protocol Layer Stack
+
+<table>
+<tr>
+<th>Layer</th>
+<th>Implementation</th>
+</tr>
+<tr><td><strong>Transport</strong></td><td>Raw TCP via Linux syscalls (<code>socket</code>, <code>connect</code>, <code>bind</code>, <code>listen</code>, <code>accept</code>)</td></tr>
+<tr><td><strong>Encryption</strong></td><td><code>chacha20-poly1305@openssh.com</code> — two-key AEAD, sequence-number nonce</td></tr>
+<tr><td><strong>Key Exchange</strong></td><td>Curve25519 ECDH (<code>curve25519-sha256</code>), SHA-256 exchange hash</td></tr>
+<tr><td><strong>Host Auth</strong></td><td>Ed25519 signatures (<code>ssh-ed25519</code>), SHA-512 internals</td></tr>
+<tr><td><strong>User Auth</strong></td><td>Password authentication (<code>ssh-userauth</code> service)</td></tr>
+<tr><td><strong>Channels</strong></td><td>Up to 8 multiplexed channels with independent window management</td></tr>
+<tr><td><strong>Shell</strong></td><td>PTY via <code>/dev/ptmx</code>, poll-based I/O relay, child lifecycle management</td></tr>
+<tr><td><strong>Exec</strong></td><td>Pipe-based <code>bash -c</code> for non-interactive commands, stdout/stderr merged</td></tr>
+<tr><td><strong>SFTP</strong></td><td>SFTPv3 with 16 file handle slots, event-loop integrated</td></tr>
+<tr><td><strong>Forwarding</strong></td><td>Local (<code>direct-tcpip</code>) and remote (<code>tcpip-forward</code>) TCP forwarding</td></tr>
+<tr><td><strong>TLS</strong></td><td>Optional TLS 1.3 wrapping (X25519 + ChaCha20-Poly1305) via I/O dispatch</td></tr>
+<tr><td><strong>Key Derivation</strong></td><td>HKDF-SHA256 with RFC 4253 key derivation (A-F letters)</td></tr>
+<tr><td><strong>MAC</strong></td><td><code>hmac-sha2-256</code> advertised for compatibility (implicit with AEAD cipher)</td></tr>
+</table>
+
+---
+
+## Platform Support
+
+<table>
+<tr>
+<th>Capability</th>
+<th>Linux x86_64</th>
+</tr>
+<tr><td>Bind mode (SSH server)</td><td>Full</td></tr>
+<tr><td>Reverse mode (SSH client)</td><td>Full</td></tr>
+<tr><td>ChaCha20-Poly1305 AEAD</td><td>Full</td></tr>
+<tr><td>X25519 key exchange</td><td>Full</td></tr>
+<tr><td>Ed25519 host keys</td><td>Full</td></tr>
+<tr><td>Interactive PTY shell</td><td>Full</td></tr>
+<tr><td>Pipe command execution</td><td>Full</td></tr>
+<tr><td>SFTP file transfer</td><td>Full</td></tr>
+<tr><td>Local port forwarding</td><td>Full</td></tr>
+<tr><td>Remote port forwarding</td><td>Full</td></tr>
+<tr><td>TLS 1.3 wrapping</td><td>Full</td></tr>
+<tr><td>Channel multiplexing (8)</td><td>Full</td></tr>
+<tr><td>Password authentication</td><td>Full</td></tr>
+<tr><td>Public key authentication</td><td>Full</td></tr>
+</table>
+
+Linux x86_64 only. Uses raw `syscall` instructions and NASM-specific syntax. No portability to other architectures or operating systems.
+
+---
+
+## Security
+
+### Vulnerability Reporting
+
+**Report security issues via:**
+- GitHub Security Advisories (preferred)
+- Private disclosure to maintainers
+- Responsible disclosure timeline (90 days)
+
+**Do NOT:**
+- Open public GitHub issues for vulnerabilities
+- Disclose before coordination with maintainers
+- Exploit vulnerabilities in unauthorized contexts
+
+### Threat Model
+
+**In scope:**
+- Encrypted SSH transport between operator and target
+- Host key verification via Ed25519 signatures
+- Authenticated key exchange with forward secrecy (ephemeral X25519)
+- Authorized testing with known monitoring
+
+**Out of scope:**
+- Evading advanced EDR/XDR systems
+- Anti-forensics or evidence destruction
+- Defeating kernel security modules
+- Sophisticated traffic analysis evasion
+
+### What Depth Does NOT Do
+
+Depth is an **SSH protocol implementation**, not an offensive framework:
+
+- **Not a C2 framework** — No implant management, tasking queues, or beaconing
+- **Not a vulnerability scanner** — No scanning or enumeration capabilities
+- **Not an exploit framework** — No payload generation or exploit modules
+- **Not anti-forensics** — Does not destroy evidence or tamper with logs
+
 ---
 
 ## Future Work
@@ -383,20 +512,42 @@ Depth/
 - Sequential bind-mode connections (accept loop after session ends)
 - Terminal resize (SIGWINCH / window-change request)
 - Rekey after data volume threshold
-- Ed25519 public key authentication (live tested)
 - Window adjust for large transfers
 - Environment variable requests
 
 ---
 
-<div align="center">
+## License
 
-**Pure assembly. Full protocol. All the way down.**
+MIT License
 
-*Depth — complete SSH-2.0 in ~94 KB of x86_64 NASM*
+Copyright &copy; 2026 Real-Fruit-Snacks
+
+```
+THIS SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND.
+THE AUTHORS ARE NOT LIABLE FOR ANY DAMAGES ARISING FROM USE.
+USE AT YOUR OWN RISK AND ONLY WITH PROPER AUTHORIZATION.
+```
 
 ---
 
-**For authorized use only.** This tool is intended for legitimate security research, authorized penetration testing, and educational purposes. Unauthorized access to computer systems is illegal. Users are solely responsible for ensuring compliance with all applicable laws and obtaining proper authorization before use.
+## Resources
+
+- **GitHub**: [github.com/Real-Fruit-Snacks/Depth](https://github.com/Real-Fruit-Snacks/Depth)
+- **Releases**: [Latest Release](https://github.com/Real-Fruit-Snacks/Depth/releases/latest)
+- **Issues**: [Report a Bug](https://github.com/Real-Fruit-Snacks/Depth/issues)
+- **Security**: [SECURITY.md](SECURITY.md)
+- **Contributing**: [CONTRIBUTING.md](CONTRIBUTING.md)
+- **Changelog**: [CHANGELOG.md](CHANGELOG.md)
+
+---
+
+<div align="center">
+
+**Part of the Real-Fruit-Snacks water-themed security toolkit**
+
+[Aquifer](https://github.com/Real-Fruit-Snacks/Aquifer) • [Cascade](https://github.com/Real-Fruit-Snacks/Cascade) • [Conduit](https://github.com/Real-Fruit-Snacks/Conduit) • [Deadwater](https://github.com/Real-Fruit-Snacks/Deadwater) • [Deluge](https://github.com/Real-Fruit-Snacks/Deluge) • [Depth](https://github.com/Real-Fruit-Snacks/Depth) • [Dew](https://github.com/Real-Fruit-Snacks/Dew) • [Droplet](https://github.com/Real-Fruit-Snacks/Droplet) • [Fathom](https://github.com/Real-Fruit-Snacks/Fathom) • [Flux](https://github.com/Real-Fruit-Snacks/Flux) • [Grotto](https://github.com/Real-Fruit-Snacks/Grotto) • [HydroShot](https://github.com/Real-Fruit-Snacks/HydroShot) • [Maelstrom](https://github.com/Real-Fruit-Snacks/Maelstrom) • [Rapids](https://github.com/Real-Fruit-Snacks/Rapids) • [Ripple](https://github.com/Real-Fruit-Snacks/Ripple) • [Riptide](https://github.com/Real-Fruit-Snacks/Riptide) • [Runoff](https://github.com/Real-Fruit-Snacks/Runoff) • [Seep](https://github.com/Real-Fruit-Snacks/Seep) • [Shallows](https://github.com/Real-Fruit-Snacks/Shallows) • [Siphon](https://github.com/Real-Fruit-Snacks/Siphon) • [Slipstream](https://github.com/Real-Fruit-Snacks/Slipstream) • [Spillway](https://github.com/Real-Fruit-Snacks/Spillway) • [Surge](https://github.com/Real-Fruit-Snacks/Surge) • [Tidemark](https://github.com/Real-Fruit-Snacks/Tidemark) • [Tidepool](https://github.com/Real-Fruit-Snacks/Tidepool) • [Undercurrent](https://github.com/Real-Fruit-Snacks/Undercurrent) • [Undertow](https://github.com/Real-Fruit-Snacks/Undertow) • [Vapor](https://github.com/Real-Fruit-Snacks/Vapor) • [Wellspring](https://github.com/Real-Fruit-Snacks/Wellspring) • [Whirlpool](https://github.com/Real-Fruit-Snacks/Whirlpool)
+
+*Remember: With great power comes great responsibility.*
 
 </div>

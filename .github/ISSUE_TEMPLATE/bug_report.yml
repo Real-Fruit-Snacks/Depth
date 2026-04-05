@@ -1,0 +1,86 @@
+name: Bug Report
+description: Report a bug in Depth
+labels: ["bug"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting a bug. Please fill out the information below to help us investigate.
+
+  - type: input
+    id: version
+    attributes:
+      label: Depth Version
+      description: "Git commit hash or release tag"
+      placeholder: "main / v0.1.0"
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: OS / Platform
+      description: "Operating system and architecture"
+      placeholder: "Ubuntu 24.04 x86_64 / Debian 12 x86_64"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: "Which component is affected?"
+      options:
+        - Transport (connection, handshake)
+        - Crypto (ChaCha20, Poly1305, Ed25519, X25519)
+        - Key Exchange (ECDH, KEXINIT)
+        - Authentication (password, pubkey)
+        - Channels (multiplexing, window)
+        - PTY / Shell
+        - SFTP
+        - Port Forwarding
+        - TLS 1.3
+        - Build System
+        - Tests
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: "Provide the exact steps to reproduce the bug"
+      placeholder: |
+        1. Build with `make`
+        2. Run `./build/depth`
+        3. Connect with `ssh -p 7777 svc@target`
+        4. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: "What did you expect to happen?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: "What actually happened?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / Output
+      description: "Paste any relevant logs, error messages, or terminal output"
+      render: shell
+    validations:
+      required: false
